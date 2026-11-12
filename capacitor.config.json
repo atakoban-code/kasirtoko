@@ -1,0 +1,7 @@
+{
+  "appId": "com.udcassandra.kasirtoko",
+  "appName": "Kasir Toko",
+  "webDir": "www",
+  "backgroundColor": "#f3f4f8",
+  "android": { "allowMixedContent": false }
+}
