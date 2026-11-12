@@ -3,5 +3,8 @@
   "appName": "Kasir Toko",
   "webDir": "www",
   "backgroundColor": "#f3f4f8",
-  "android": { "allowMixedContent": false }
+  "android": {
+    "allowMixedContent": false,
+    "adjustMarginsForEdgeToEdge": "force"
+  }
 }
