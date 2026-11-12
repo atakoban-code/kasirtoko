@@ -11099,6 +11099,24 @@ function expImpHist() {
   dlf("riwayat-impor-" + (D.cg || "gudang") + ".xlsx", wbk(a, "Riwayat Impor"));
 }
 async function saveFile(name, blob) {
+  const CP = window.Capacitor;
+  if (CP && CP.isNativePlatform && CP.isNativePlatform() && CP.Plugins && CP.Plugins.Filesystem && CP.Plugins.Share) {
+    try {
+      const b64 = await new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res(String(r.result).split(",")[1]);
+        r.onerror = rej;
+        r.readAsDataURL(blob);
+      });
+      const w = await CP.Plugins.Filesystem.writeFile({ path: name, data: b64, directory: "CACHE" });
+      await CP.Plugins.Share.share({ title: name, url: w.uri, dialogTitle: "Simpan / bagikan" });
+      return true;
+    } catch (e) {
+      const m = String(e && (e.message || e) || "");
+      toast(/cancel|dismiss/i.test(m) ? "Penyimpanan dibatalkan" : "Gagal menyimpan file");
+      return false;
+    }
+  }
   let d = null;
   try {
     if (window.claude && claude.use) d = await claude.use("downloads");
