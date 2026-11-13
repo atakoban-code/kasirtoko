@@ -12144,6 +12144,11 @@ function puHome() {
       return m ? [+m[1], +m[2], +m[3], m[4] === undefined ? 1 : +m[4]] : null;
     };
     var topColor = function () {
+      var tr = document.querySelector(".cs0 > svg.cs-tr");
+      if (tr && tr.getClientRects().length) {
+        var hx = /^#([0-9a-f]{6})$/i.exec(getComputedStyle(document.documentElement).getPropertyValue("--w1").trim());
+        if (hx) return [parseInt(hx[1].slice(0, 2), 16), parseInt(hx[1].slice(2, 4), 16), parseInt(hx[1].slice(4, 6), 16), 1];
+      }
       var el = document.elementFromPoint(Math.round(innerWidth / 2), 4);
       for (var i = 0; el && i < 14; i++, el = el.parentElement) {
         var cs = getComputedStyle(el), c = rgb(cs.backgroundColor);
