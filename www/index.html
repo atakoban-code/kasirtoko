@@ -11100,6 +11100,30 @@ function expImpHist() {
 }
 async function saveFile(name, blob) {
   const CP = window.Capacitor;
+  if (CP && CP.isNativePlatform && CP.isNativePlatform() && CP.Plugins && CP.Plugins.Media && /^image\//.test(blob.type || "")) {
+    try {
+      const M = CP.Plugins.Media;
+      const dataUrl = await new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res(String(r.result));
+        r.onerror = rej;
+        r.readAsDataURL(blob);
+      });
+      const getAlb = async () => {
+        const r = await M.getAlbums();
+        return ((r && r.albums) || []).find((a) => a.name === "Kasir Toko");
+      };
+      let alb = await getAlb();
+      if (!alb) {
+        await M.createAlbum({ name: "Kasir Toko" });
+        alb = await getAlb();
+      }
+      await M.savePhoto({ path: dataUrl, albumIdentifier: alb && alb.identifier, fileName: name.replace(/\.[^.]+$/, "") });
+      return true;
+    } catch (e) {
+      /* gagal simpan ke galeri: lanjut ke menu bagikan */
+    }
+  }
   if (CP && CP.isNativePlatform && CP.isNativePlatform() && CP.Plugins && CP.Plugins.Filesystem && CP.Plugins.Share) {
     try {
       const b64 = await new Promise((res, rej) => {
@@ -12107,4 +12131,52 @@ function puHome() {
     });
   });
 })();
-</script></body></html>
+</script><script>
+(function () {
+  try {
+    var CP = window.Capacitor;
+    if (!CP || !CP.isNativePlatform || !CP.isNativePlatform()) return;
+    var SB = CP.Plugins && CP.Plugins.StatusBar;
+    if (!SB) return;
+    var last = "", tm = 0;
+    var rgb = function (s) {
+      var m = /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/.exec(s || "");
+      return m ? [+m[1], +m[2], +m[3], m[4] === undefined ? 1 : +m[4]] : null;
+    };
+    var topColor = function () {
+      var el = document.elementFromPoint(Math.round(innerWidth / 2), 4);
+      for (var i = 0; el && i < 14; i++, el = el.parentElement) {
+        var cs = getComputedStyle(el), c = rgb(cs.backgroundColor);
+        if (c && c[3] >= 0.95) return c;
+        if (c && c[3] > 0.05) return null;
+        if (cs.backgroundImage && cs.backgroundImage.indexOf("gradient") > -1) {
+          var all = cs.backgroundImage.match(/rgba?\([^)]+\)/g) || [];
+          for (var k = 0; k < all.length; k++) { var g = rgb(all[k]); if (g && g[3] >= 0.95) return g; }
+        }
+      }
+      return [243, 244, 248, 1];
+    };
+    var hex = function (c) { return "#" + c.slice(0, 3).map(function (v) { return ("0" + v.toString(16)).slice(-2); }).join(""); };
+    var sync = function () {
+      try {
+        var c = topColor();
+        if (!c) return;
+        var h = hex(c);
+        if (h === last) return;
+        last = h;
+        var lum = (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) / 255;
+        SB.setBackgroundColor({ color: h }).catch(function () {});
+        SB.setStyle({ style: lum > 0.55 ? "LIGHT" : "DARK" }).catch(function () {});
+      } catch (e) {}
+    };
+    var later = function () { clearTimeout(tm); tm = setTimeout(sync, 150); };
+    new MutationObserver(later).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class", "style"] });
+    addEventListener("resize", later);
+    addEventListener("popstate", later);
+    document.addEventListener("visibilitychange", later);
+    setTimeout(sync, 300);
+    setTimeout(sync, 1200);
+  } catch (e) {}
+})();
+</script>
+</body></html>
